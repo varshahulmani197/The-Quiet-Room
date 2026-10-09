@@ -21,6 +21,33 @@ export type AtmosphereType =
   | 'fireplace'
   | 'minimal';
 
+export type WeatherType =
+  | 'rain'
+  | 'snow'
+  | 'sunbeams'
+  | 'petals'
+  | 'embers'
+  | 'fireflies'
+  | 'zeal-sparks'
+  | 'clear';
+
+export type LightingMood =
+  | 'cool-overcast'
+  | 'golden-dawn'
+  | 'silvery-moonlight'
+  | 'emerald-canopy'
+  | 'warm-amber'
+  | 'rose-twilight'
+  | 'vivid-electric'
+  | 'neutral-diffuse';
+
+export interface WeatherOverlaySettings {
+  mode: 'auto' | WeatherType;
+  particleIntensity: 'off' | 'subtle' | 'balanced' | 'rich';
+  lightingIntensity: 'off' | 'soft' | 'moderate' | 'vivid';
+  ambientLightPulse: boolean;
+}
+
 export type SoundscapeType =
   | 'rain'
   | 'forest'
@@ -73,6 +100,8 @@ export interface Moment {
   typographySettings: TypographySettings;
   moodHistory: MoodHistoryEntry[];
   poeticResonance?: string;
+  emotionalTags?: string[];
+  weatherType?: WeatherType;
 }
 
 export interface AppSettings {

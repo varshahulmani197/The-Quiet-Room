@@ -1,4 +1,4 @@
-import { Mood, AtmosphereType, SoundscapeType } from '../types';
+import { Mood, AtmosphereType, SoundscapeType, WeatherType, LightingMood } from '../types';
 
 export interface SentimentAnalysisResult {
   dominantMood: Mood;
@@ -10,6 +10,10 @@ export interface SentimentAnalysisResult {
   valence: number; // -1 (deep sorrow/negative) to +1 (radiant joy/positive)
   arousal: number; // 0 (stillness/quiet) to 1 (high energy/intensity)
   wordCount: number;
+  emotionalTags: string[];
+  weatherType: WeatherType;
+  lightingMood: LightingMood;
+  weatherDescription: string;
 }
 
 // Valence and Arousal Lexicon
@@ -238,6 +242,150 @@ const MOOD_TO_ATMOSPHERE_CONFIG: Record<
 };
 
 /**
+ * Derives weather overlay mode, dynamic lighting mood, and emotional tags
+ */
+export function deriveWeatherAndLighting(
+  dominantMood: Mood,
+  text: string
+): {
+  weatherType: WeatherType;
+  lightingMood: LightingMood;
+  emotionalTags: string[];
+  weatherDescription: string;
+} {
+  const lower = text.toLowerCase();
+
+  // Keyword-specific overrides
+  if (/\b(snow|snowing|snowflake|blizzard|frost|ice|icy|wintry|winter|solitude|isolated)\b/.test(lower)) {
+    return {
+      weatherType: 'snow',
+      lightingMood: 'silvery-moonlight',
+      emotionalTags: ['quiet-snowfall', 'wintry-solitude', 'pale-stillness'],
+      weatherDescription: 'Quiet crystalline snow drifting in solitary stillness',
+    };
+  }
+
+  if (/\b(rain|raining|raindrop|rainy|drizzle|storm|tears|wept|crying|ache|grief|sorrow)\b/.test(lower)) {
+    return {
+      weatherType: 'rain',
+      lightingMood: 'cool-overcast',
+      emotionalTags: ['rain-mist', 'melancholy', 'overcast-sky'],
+      weatherDescription: 'Gentle raindrops blurring the sanctuary window',
+    };
+  }
+
+  if (/\b(sun|sunlight|sunbeam|sunbeams|dawn|morning|radiant|radiance|bright|delight|golden)\b/.test(lower)) {
+    return {
+      weatherType: 'sunbeams',
+      lightingMood: 'golden-dawn',
+      emotionalTags: ['golden-sunbeams', 'warm-radiance', 'morning-dawn'],
+      weatherDescription: 'Warm sunbeams and drifting golden motes',
+    };
+  }
+
+  if (/\b(petals|leaves|forest|moss|stream|breeze|woods|woodland|serene|tranquil)\b/.test(lower)) {
+    return {
+      weatherType: 'petals',
+      lightingMood: 'emerald-canopy',
+      emotionalTags: ['drifting-petals', 'forest-breeze', 'serene-shade'],
+      weatherDescription: 'Soft petals and spores carried on a woodland breeze',
+    };
+  }
+
+  if (/\b(embers|ember|hearth|fireplace|flame|sepia|nostalgia|childhood|summer|old\s+days|remember)\b/.test(lower)) {
+    return {
+      weatherType: 'embers',
+      lightingMood: 'warm-amber',
+      emotionalTags: ['hearth-embers', 'nostalgia', 'sepia-glow'],
+      weatherDescription: 'Warm glowing embers rising from the hearth',
+    };
+  }
+
+  if (/\b(stars|starlight|fireflies|firefly|twilight|night|darling|beloved|kiss|embrace|whisper|romance)\b/.test(lower)) {
+    return {
+      weatherType: 'fireflies',
+      lightingMood: 'rose-twilight',
+      emotionalTags: ['starlight-fireflies', 'twilight-intimacy', 'velvet-dusk'],
+      weatherDescription: 'Pulsing twilight stardust and gentle luminescences',
+    };
+  }
+
+  if (/\b(zeal|ambition|fire|wild|rush|pulse|conquer|triumph|victory|bold|power|relentless)\b/.test(lower)) {
+    return {
+      weatherType: 'zeal-sparks',
+      lightingMood: 'vivid-electric',
+      emotionalTags: ['zeal-sparks', 'inner-momentum', 'dynamic-crest'],
+      weatherDescription: 'Spirited sparks rising with focused determination',
+    };
+  }
+
+  // Mood-based fallback
+  switch (dominantMood) {
+    case 'melancholic':
+      return {
+        weatherType: 'rain',
+        lightingMood: 'cool-overcast',
+        emotionalTags: ['rain-mist', 'melancholy', 'soft-sorrow'],
+        weatherDescription: 'Gentle raindrops blurring the sanctuary window',
+      };
+    case 'lonely':
+      return {
+        weatherType: 'snow',
+        lightingMood: 'silvery-moonlight',
+        emotionalTags: ['quiet-snowfall', 'solitude', 'pale-stillness'],
+        weatherDescription: 'Quiet crystalline snow drifting in solitary stillness',
+      };
+    case 'joyful':
+    case 'hopeful':
+      return {
+        weatherType: 'sunbeams',
+        lightingMood: 'golden-dawn',
+        emotionalTags: ['golden-sunbeams', 'warm-radiance', 'morning-dawn'],
+        weatherDescription: 'Warm sunbeams and drifting golden motes',
+      };
+    case 'peaceful':
+      return {
+        weatherType: 'petals',
+        lightingMood: 'emerald-canopy',
+        emotionalTags: ['drifting-petals', 'forest-breeze', 'serene-shade'],
+        weatherDescription: 'Soft petals and spores carried on a woodland breeze',
+      };
+    case 'nostalgic':
+      return {
+        weatherType: 'embers',
+        lightingMood: 'warm-amber',
+        emotionalTags: ['hearth-embers', 'nostalgia', 'sepia-glow'],
+        weatherDescription: 'Warm glowing embers rising from the hearth',
+      };
+    case 'romantic':
+    case 'dreamy':
+      return {
+        weatherType: 'fireflies',
+        lightingMood: 'rose-twilight',
+        emotionalTags: ['starlight-fireflies', 'twilight-intimacy', 'velvet-dusk'],
+        weatherDescription: 'Pulsing twilight stardust and gentle luminescences',
+      };
+    case 'energetic':
+    case 'angry':
+      return {
+        weatherType: 'zeal-sparks',
+        lightingMood: 'vivid-electric',
+        emotionalTags: ['zeal-sparks', 'inner-momentum', 'dynamic-crest'],
+        weatherDescription: 'Spirited sparks rising with focused determination',
+      };
+    case 'reflective':
+    case 'neutral':
+    default:
+      return {
+        weatherType: 'clear',
+        lightingMood: 'neutral-diffuse',
+        emotionalTags: ['still-sanctuary', 'diffuse-calm', 'quiet-focus'],
+        weatherDescription: 'Tranquil stillness with subtle floating motes',
+      };
+  }
+}
+
+/**
  * Pure sentiment analysis calculation on text
  */
 export function analyzeSentiment(text: string): SentimentAnalysisResult {
@@ -247,6 +395,7 @@ export function analyzeSentiment(text: string): SentimentAnalysisResult {
 
   if (wordCount < 3) {
     const neutralConfig = MOOD_TO_ATMOSPHERE_CONFIG.neutral;
+    const weatherInfo = deriveWeatherAndLighting('neutral', text);
     return {
       dominantMood: 'neutral',
       secondaryMood: null,
@@ -257,6 +406,10 @@ export function analyzeSentiment(text: string): SentimentAnalysisResult {
       valence: 0,
       arousal: 0.2,
       wordCount,
+      emotionalTags: weatherInfo.emotionalTags,
+      weatherType: weatherInfo.weatherType,
+      lightingMood: weatherInfo.lightingMood,
+      weatherDescription: weatherInfo.weatherDescription,
     };
   }
 
@@ -327,6 +480,7 @@ export function analyzeSentiment(text: string): SentimentAnalysisResult {
 
   const config = MOOD_TO_ATMOSPHERE_CONFIG[dominantMood] || MOOD_TO_ATMOSPHERE_CONFIG.neutral;
   const confidence = Math.min(0.95, 0.45 + topScore * 0.1);
+  const weatherInfo = deriveWeatherAndLighting(dominantMood, text);
 
   return {
     dominantMood,
@@ -338,6 +492,10 @@ export function analyzeSentiment(text: string): SentimentAnalysisResult {
     valence: Math.max(-1, Math.min(1, avgValence)),
     arousal: Math.max(0, Math.min(1, avgArousal)),
     wordCount,
+    emotionalTags: weatherInfo.emotionalTags,
+    weatherType: weatherInfo.weatherType,
+    lightingMood: weatherInfo.lightingMood,
+    weatherDescription: weatherInfo.weatherDescription,
   };
 }
 
@@ -439,6 +597,13 @@ export class DebouncedSentimentAnalyzer {
               valence: localResult.valence,
               arousal: localResult.arousal,
               wordCount: localResult.wordCount,
+              emotionalTags:
+                Array.isArray(data.emotionalTags) && data.emotionalTags.length > 0
+                  ? data.emotionalTags
+                  : localResult.emotionalTags,
+              weatherType: (data.weatherType as WeatherType) || localResult.weatherType,
+              lightingMood: (data.lightingMood as LightingMood) || localResult.lightingMood,
+              weatherDescription: localResult.weatherDescription,
             };
 
             this.isProcessing = false;

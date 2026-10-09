@@ -90,7 +90,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
       <h1 class="title">${moment.title || 'Untitled Moment'}</h1>
       <div class="meta">
         ${new Date(moment.createdAt).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}
-        · Mood: ${moment.dominantMood}
+        · Mood: ${moment.dominantMood}${moment.weatherType ? ` · Weather: ${moment.weatherType}` : ''}${moment.emotionalTags && moment.emotionalTags.length ? ` · Tags: #${moment.emotionalTags.join(' #')}` : ''}
         · Words: ${moment.wordCount}
       </div>
     </div>

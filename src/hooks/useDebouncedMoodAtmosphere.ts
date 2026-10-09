@@ -1,5 +1,13 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Mood, AtmosphereType, SoundscapeType, MoodHistoryEntry } from '../types';
+import {
+  Mood,
+  AtmosphereType,
+  SoundscapeType,
+  MoodHistoryEntry,
+  WeatherType,
+  LightingMood,
+  WeatherOverlaySettings,
+} from '../types';
 import {
   DebouncedSentimentAnalyzer,
   SentimentAnalysisResult,
@@ -16,14 +24,25 @@ interface UseDebouncedMoodAtmosphereOptions {
   initialMood?: Mood;
   initialAtmosphere?: AtmosphereType;
   initialMoodHistory?: MoodHistoryEntry[];
+  initialEmotionalTags?: string[];
+  initialWeatherType?: WeatherType;
   debounceMs?: number;
   isManualAtmosphereOverride?: boolean;
 }
+
+const DEFAULT_WEATHER_SETTINGS: WeatherOverlaySettings = {
+  mode: 'auto',
+  particleIntensity: 'balanced',
+  lightingIntensity: 'moderate',
+  ambientLightPulse: true,
+};
 
 export function useDebouncedMoodAtmosphere({
   initialMood = 'neutral',
   initialAtmosphere = 'auto',
   initialMoodHistory = [],
+  initialEmotionalTags,
+  initialWeatherType,
   debounceMs = 1200,
   isManualAtmosphereOverride = false,
 }: UseDebouncedMoodAtmosphereOptions = {}) {
@@ -40,6 +59,21 @@ export function useDebouncedMoodAtmosphere({
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
   const [moodHistory, setMoodHistory] = useState<MoodHistoryEntry[]>(initialMoodHistory);
   const [isManualOverride, setIsManualOverride] = useState<boolean>(isManualAtmosphereOverride);
+
+  // Weather-based visual overlay system state
+  const [emotionalTags, setEmotionalTags] = useState<string[]>(
+    initialEmotionalTags || ['still-sanctuary', 'diffuse-calm']
+  );
+  const [weatherType, setWeatherType] = useState<WeatherType>(
+    initialWeatherType || 'clear'
+  );
+  const [lightingMood, setLightingMood] = useState<LightingMood>('neutral-diffuse');
+  const [weatherDescription, setWeatherDescription] = useState<string>(
+    'Tranquil stillness with subtle floating motes'
+  );
+  const [weatherSettings, setWeatherSettings] = useState<WeatherOverlaySettings>(
+    DEFAULT_WEATHER_SETTINGS
+  );
 
   // Audio engine state sync
   const [audioState, setAudioState] = useState<MoodAudioState>(moodAudioController.getState());
@@ -68,13 +102,18 @@ export function useDebouncedMoodAtmosphere({
     setValence(result.valence);
     setArousal(result.arousal);
 
+    // Weather overlay & emotional tags updates
+    setEmotionalTags(result.emotionalTags);
+    setWeatherType(result.weatherType);
+    setLightingMood(result.lightingMood);
+    setWeatherDescription(result.weatherDescription);
+
     // 1. Update visual atmosphere canvas state if not overridden manually
     if (!isManualOverrideRef.current) {
       setAtmosphereState(result.recommendedAtmosphere);
     }
 
     // 2. CRITICAL SYNC: Synchronize ambient music engine with detected mood!
-    // Triggers smooth 3-5s crossfade between Happy, Sad, Romantic, Zeal
     moodTransitionHandler.handleMoodDetected(result.dominantMood, result.confidence);
 
     // 3. Append to mood history timeline if different from last recorded entry
@@ -147,14 +186,30 @@ export function useDebouncedMoodAtmosphere({
     }
   }, []);
 
+  // Weather overlay manual selection vs auto
+  const setManualWeather = useCallback((newWeather: WeatherType | 'auto') => {
+    setWeatherSettings((prev) => ({
+      ...prev,
+      mode: newWeather,
+    }));
+  }, []);
+
   const resetToAutoAtmosphere = useCallback((currentText: string) => {
     setIsManualOverride(false);
     const instant = analyzeSentiment(currentText);
     setAtmosphereState(instant.recommendedAtmosphere);
     setDominantMood(instant.dominantMood);
     setSecondaryMood(instant.secondaryMood);
+    setEmotionalTags(instant.emotionalTags);
+    setWeatherType(instant.weatherType);
+    setLightingMood(instant.lightingMood);
+    setWeatherDescription(instant.weatherDescription);
+    setWeatherSettings((prev) => ({ ...prev, mode: 'auto' }));
     moodTransitionHandler.handleMoodDetected(instant.dominantMood, 0.95);
   }, []);
+
+  const activeEffectiveWeather: WeatherType =
+    weatherSettings.mode === 'auto' ? weatherType : weatherSettings.mode;
 
   return {
     dominantMood,
@@ -169,6 +224,14 @@ export function useDebouncedMoodAtmosphere({
     moodHistory,
     isManualOverride,
     audioState,
+    emotionalTags,
+    weatherType,
+    lightingMood,
+    weatherDescription,
+    weatherSettings,
+    activeEffectiveWeather,
+    setWeatherSettings,
+    setManualWeather,
     feedText,
     flushText,
     setManualAtmosphere,

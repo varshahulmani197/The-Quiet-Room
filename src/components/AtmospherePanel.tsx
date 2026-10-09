@@ -15,7 +15,7 @@ import {
   Heart,
   Zap,
 } from 'lucide-react';
-import { AtmosphereType, Mood } from '../types';
+import { AtmosphereType, Mood, WeatherType, LightingMood } from '../types';
 import { CanonicalMusicMood } from '../utils/audio/moodAudioLibrary';
 
 interface AtmospherePanelProps {
@@ -36,6 +36,10 @@ interface AtmospherePanelProps {
   onSelectMusicMood: (mood: CanonicalMusicMood) => void;
   isAutoplayBlocked: boolean;
   poeticResonance?: string;
+  weatherType?: WeatherType;
+  lightingMood?: LightingMood;
+  emotionalTags?: string[];
+  onOpenWeatherModal?: () => void;
 }
 
 const VISUAL_ATMOSPHERES: { id: AtmosphereType; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
@@ -103,6 +107,10 @@ export const AtmospherePanel: React.FC<AtmospherePanelProps> = ({
   onSelectMusicMood,
   isAutoplayBlocked,
   poeticResonance,
+  weatherType,
+  lightingMood,
+  emotionalTags,
+  onOpenWeatherModal,
 }) => {
   return (
     <AnimatePresence>
@@ -196,6 +204,46 @@ export const AtmospherePanel: React.FC<AtmospherePanelProps> = ({
                   </p>
                 )}
               </div>
+
+              {/* Weather & Light Visual Overlay Quick Card */}
+              {weatherType && (
+                <div className="p-3.5 rounded-xl bg-white/3 border border-white/5 flex items-center justify-between">
+                  <div className="min-w-0 flex-1 pr-2">
+                    <span className="text-[10px] uppercase font-mono tracking-wider text-stone-400 block mb-0.5">
+                      Weather & Light Overlay
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-medium text-stone-200 capitalize">
+                        {weatherType.replace('-', ' ')}
+                      </span>
+                      {lightingMood && (
+                        <>
+                          <span className="text-stone-600 text-xs">·</span>
+                          <span className="text-[11px] text-stone-400 capitalize">
+                            {lightingMood.replace('-', ' ')}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                    {emotionalTags && emotionalTags.length > 0 && (
+                      <div className="text-[10px] text-stone-500 font-mono truncate mt-0.5">
+                        #{emotionalTags.join(' #')}
+                      </div>
+                    )}
+                  </div>
+                  {onOpenWeatherModal && (
+                    <button
+                      onClick={() => {
+                        onClose();
+                        onOpenWeatherModal();
+                      }}
+                      className="px-2.5 py-1 text-xs text-amber-300 hover:text-amber-200 bg-amber-500/10 hover:bg-amber-500/20 rounded-lg transition-colors border border-amber-500/20 shrink-0"
+                    >
+                      Customize
+                    </button>
+                  )}
+                </div>
+              )}
 
               {/* Soundscape Music Tracks (4 Canonical Moods) */}
               <div className="pt-1">

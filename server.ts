@@ -69,7 +69,7 @@ app.post('/api/analyze-mood', async (req, res) => {
     try {
       const response = await ai.models.generateContent({
         model: 'gemini-3.8-flash',
-        contents: `Analyze the emotional undertone and atmosphere of this piece of writing for an ambient sanctuary app called "The Quiet Room".
+        contents: `Analyze the emotional undertone, weather imagery, and lighting atmosphere of this piece of writing for an ambient sanctuary app called "The Quiet Room".
 Categorize strictly into one of these moods:
 - joyful
 - peaceful
@@ -84,7 +84,14 @@ Categorize strictly into one of these moods:
 - dreamy
 - neutral
 
-Also identify an optional secondary mood from the same list, a recommended visual atmosphere (rain, night, forest, sunrise, fireplace, minimal), a recommended soundscape (rain, night, forest, lofi, fireplace, ambient), and a brief one-line poetic interpretation of the room's feeling (max 10 words, e.g. "Echoes of rain and distant memory").
+Also identify:
+- secondaryMood: optional string or null
+- recommendedAtmosphere: rain, night, forest, sunrise, fireplace, or minimal
+- recommendedSoundscape: rain, night, forest, lofi, fireplace, or ambient
+- poeticResonance: max 10 words, e.g. "Echoes of rain and distant memory"
+- emotionalTags: array of 2 to 4 evocative tags, e.g. ["gentle-rain", "soft-melancholy", "overcast-sky"]
+- weatherType: rain, snow, sunbeams, petals, embers, fireflies, zeal-sparks, or clear
+- lightingMood: cool-overcast, golden-dawn, silvery-moonlight, emerald-canopy, warm-amber, rose-twilight, vivid-electric, or neutral-diffuse
 
 Text to analyze:
 """${text.slice(0, 4000)}"""`,
@@ -92,7 +99,7 @@ Text to analyze:
           responseMimeType: 'application/json',
           temperature: 0.3,
           systemInstruction:
-            'You are the poetic atmosphere engine of The Quiet Room. You feel the writer\'s emotion without judgment or clinical language. Return only JSON matching: {"dominantMood": string, "secondaryMood": string|null, "recommendedAtmosphere": string, "recommendedSoundscape": string, "poeticResonance": string}',
+            'You are the poetic atmosphere engine of The Quiet Room. You feel the writer\'s emotion without judgment or clinical language. Return only JSON matching: {"dominantMood": string, "secondaryMood": string|null, "recommendedAtmosphere": string, "recommendedSoundscape": string, "poeticResonance": string, "emotionalTags": string[], "weatherType": string, "lightingMood": string}',
         },
       });
 
@@ -104,6 +111,9 @@ Text to analyze:
           recommendedAtmosphere: parsed.recommendedAtmosphere || 'minimal',
           recommendedSoundscape: parsed.recommendedSoundscape || 'night',
           poeticResonance: parsed.poeticResonance || 'Words quietly taking shape.',
+          emotionalTags: Array.isArray(parsed.emotionalTags) ? parsed.emotionalTags : ['quiet-reflection'],
+          weatherType: parsed.weatherType || 'clear',
+          lightingMood: parsed.lightingMood || 'neutral-diffuse',
           source: 'gemini',
         });
       }
@@ -119,43 +129,82 @@ Text to analyze:
   let atmosphere = 'rain';
   let soundscape = 'rain';
   let resonance = 'Soft raindrops blurring the glass.';
+  let weather = 'rain';
+  let lighting = 'cool-overcast';
+  let tags = ['rain-mist', 'melancholy', 'overcast-sky'];
 
-  if (/rain|sad|grief|tears|lost|ache|alone|dark|cold|shadow/.test(lower)) {
+  if (/snow|winter|frost|ice|cold|solitude|alone|isolated/.test(lower)) {
+    dominant = 'lonely';
+    secondary = 'reflective';
+    atmosphere = 'night';
+    soundscape = 'night';
+    resonance = 'Quiet snow drifting in solitary stillness.';
+    weather = 'snow';
+    lighting = 'silvery-moonlight';
+    tags = ['quiet-snowfall', 'wintry-solitude', 'pale-stillness'];
+  } else if (/rain|sad|grief|tears|lost|ache|dark|shadow/.test(lower)) {
     dominant = 'melancholic';
     secondary = 'reflective';
     atmosphere = 'rain';
     soundscape = 'rain';
     resonance = 'Soft raindrops blurring the glass.';
+    weather = 'rain';
+    lighting = 'cool-overcast';
+    tags = ['rain-mist', 'melancholy', 'overcast-sky'];
   } else if (/peace|calm|quiet|breeze|forest|leaves|stream|soft|serene|rest/.test(lower)) {
     dominant = 'peaceful';
     secondary = 'nostalgic';
     atmosphere = 'forest';
     soundscape = 'forest';
     resonance = 'A gentle breeze rustling through leaves.';
-  } else if (/remember|memory|used to|photograph|childhood|summer|old|ago/.test(lower)) {
+    weather = 'petals';
+    lighting = 'emerald-canopy';
+    tags = ['drifting-petals', 'forest-breeze', 'serene-shade'];
+  } else if (/remember|memory|used to|photograph|childhood|summer|old|ago|ember|hearth|fireplace/.test(lower)) {
     dominant = 'nostalgic';
     secondary = 'reflective';
     atmosphere = 'fireplace';
     soundscape = 'fireplace';
     resonance = 'The warm embers of remembering.';
+    weather = 'embers';
+    lighting = 'warm-amber';
+    tags = ['hearth-embers', 'nostalgia', 'sepia-glow'];
   } else if (/laugh|sun|warm|delight|alive|bright|smile|joy|radiant/.test(lower)) {
     dominant = 'joyful';
     secondary = 'hopeful';
     atmosphere = 'sunrise';
     soundscape = 'ambient';
     resonance = 'Golden morning light resting on the desk.';
-  } else if (/love|heart|embrace|whisper|tender|kiss|beloved|forever/.test(lower)) {
+    weather = 'sunbeams';
+    lighting = 'golden-dawn';
+    tags = ['golden-sunbeams', 'radiance', 'morning-warmth'];
+  } else if (/love|heart|embrace|whisper|tender|kiss|beloved|forever|stars/.test(lower)) {
     dominant = 'romantic';
     secondary = 'peaceful';
     atmosphere = 'night';
     soundscape = 'ambient';
     resonance = 'Velvet dusk and quiet closeness.';
+    weather = 'fireflies';
+    lighting = 'rose-twilight';
+    tags = ['starlight-fireflies', 'twilight-intimacy', 'velvet-dusk'];
+  } else if (/zeal|ambition|fire|wild|rush|pulse|conquer|triumph|victory|bold/.test(lower)) {
+    dominant = 'energetic';
+    secondary = 'joyful';
+    atmosphere = 'fireplace';
+    soundscape = 'ambient';
+    resonance = 'Sparks of zeal and determined momentum.';
+    weather = 'zeal-sparks';
+    lighting = 'vivid-electric';
+    tags = ['zeal-sparks', 'inner-momentum', 'dynamic-crest'];
   } else if (/dawn|tomorrow|hope|rise|horizon|begin|promise|sprout/.test(lower)) {
     dominant = 'hopeful';
     secondary = 'peaceful';
     atmosphere = 'sunrise';
     soundscape = 'ambient';
     resonance = 'A subtle dawn breaking on the horizon.';
+    weather = 'sunbeams';
+    lighting = 'golden-dawn';
+    tags = ['golden-dawn', 'hopeful-motes', 'soft-horizon'];
   }
 
   return res.json({
@@ -164,6 +213,9 @@ Text to analyze:
     recommendedAtmosphere: atmosphere,
     recommendedSoundscape: soundscape,
     poeticResonance: resonance,
+    emotionalTags: tags,
+    weatherType: weather,
+    lightingMood: lighting,
     source: 'heuristic-resilient',
   });
 });

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ArrowLeft, Edit3, BookOpen, Share2, Sparkles, Volume2, VolumeX, Trash2 } from 'lucide-react';
 import { Moment } from '../types';
 import { AtmosphereCanvas } from './AtmosphereCanvas';
+import { WeatherOverlay } from './WeatherOverlay';
 import { moodAudioController } from '../utils/audio/moodAudioController';
 
 interface MemoryRoomModalProps {
@@ -70,11 +71,38 @@ export const MemoryRoomModal: React.FC<MemoryRoomModalProps> = ({
     <div className="fixed inset-0 z-50 overflow-y-auto bg-black flex flex-col justify-between">
       {/* Dynamic atmospheric canvas awakens in phase 1 */}
       {phase >= 1 && (
-        <AtmosphereCanvas
-          atmosphere={moment.atmosphere}
-          mood={moment.dominantMood}
-          intensity="normal"
-        />
+        <>
+          <AtmosphereCanvas
+            atmosphere={moment.atmosphere}
+            mood={moment.dominantMood}
+            intensity="normal"
+          />
+          <WeatherOverlay
+            weather={moment.weatherType || 'clear'}
+            lightingMood={
+              moment.dominantMood === 'melancholic'
+                ? 'cool-overcast'
+                : moment.dominantMood === 'joyful' || moment.dominantMood === 'hopeful'
+                ? 'golden-dawn'
+                : moment.dominantMood === 'peaceful'
+                ? 'emerald-canopy'
+                : moment.dominantMood === 'nostalgic'
+                ? 'warm-amber'
+                : moment.dominantMood === 'romantic'
+                ? 'rose-twilight'
+                : moment.dominantMood === 'lonely'
+                ? 'silvery-moonlight'
+                : 'neutral-diffuse'
+            }
+            emotionalTags={moment.emotionalTags || []}
+            settings={{
+              mode: moment.weatherType || 'auto',
+              particleIntensity: 'balanced',
+              lightingIntensity: 'moderate',
+              ambientLightPulse: true,
+            }}
+          />
+        </>
       )}
 
       {/* Top memory navigation */}

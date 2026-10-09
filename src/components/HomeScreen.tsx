@@ -198,10 +198,20 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
 
                   {/* Card Footer */}
                   <div className="pt-4 border-t border-white/5 flex items-center justify-between text-[11px] text-stone-500">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5 flex-wrap">
                       <span>{moment.wordCount} words</span>
                       <span>·</span>
-                      <span className="capitalize">{moment.atmosphere}</span>
+                      <span className="capitalize text-stone-400">
+                        {moment.weatherType ? moment.weatherType.replace('-', ' ') : moment.atmosphere}
+                      </span>
+                      {moment.emotionalTags && moment.emotionalTags.length > 0 && (
+                        <>
+                          <span className="text-stone-600">·</span>
+                          <span className="text-stone-400 font-mono text-[10px]">
+                            #{moment.emotionalTags[0]}
+                          </span>
+                        </>
+                      )}
                     </div>
 
                     <div className="flex items-center gap-2">
