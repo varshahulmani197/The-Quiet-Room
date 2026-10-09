@@ -1,0 +1,6 @@
+{
+  "name": "The Quiet Room",
+  "description": "An ambient, emotionally intelligent writing sanctuary that feels what you write and adapts visual atmosphere, typography, and soundscapes.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,85 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-cormorant: 'Cormorant Garamond', Georgia, serif;
+    --font-playfair: 'Playfair Display', Georgia, serif;
+    --font-lora: 'Lora', Georgia, serif;
+    --font-jakarta: 'Plus Jakarta Sans', system-ui, sans-serif;
+    --font-jetbrains: 'JetBrains Mono', monospace;
+  }
+
+  body {
+    font-family: var(--font-jakarta);
+    background-color: #0c0e12;
+    color: #e2e4e9;
+    letter-spacing: -0.01em;
+  }
+}
+
+/* Custom Typography Utilities */
+.font-cormorant {
+  font-family: var(--font-cormorant);
+}
+
+.font-playfair {
+  font-family: var(--font-playfair);
+}
+
+.font-lora {
+  font-family: var(--font-lora);
+}
+
+.font-sans-modern {
+  font-family: var(--font-jakarta);
+}
+
+.font-mono-code {
+  font-family: var(--font-jetbrains);
+}
+
+/* Subtle custom scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+/* Ambient glow and breathing keyframes */
+@keyframes ambient-pulse {
+  0%, 100% {
+    opacity: 0.35;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.55;
+    transform: scale(1.04);
+  }
+}
+
+@keyframes cursor-breathe {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+
+.animate-ambient-pulse {
+  animation: ambient-pulse 14s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-cursor-breathe {
+  animation: cursor-breathe 1.2s ease-in-out infinite;
+}
+
